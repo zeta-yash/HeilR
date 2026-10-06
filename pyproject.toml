@@ -1,0 +1,18 @@
+[project]
+name = "scam-autopsy"
+version = "0.1.0"
+description = "Defensive scam-message analyser: deterministic engine + guard-railed LLM."
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115", "uvicorn[standard]>=0.30", "pydantic>=2.7", "python-dotenv>=1.0",
+  "langchain-core>=0.3",
+  "langchain-mistralai>=0.2",
+  "langchain-google-genai>=3.8",
+  "langchain-openai>=0.2",
+]
+[dependency-groups]
+dev = ["pytest>=8", "httpx>=0.27"]
+[tool.uv]
+package = false
+[tool.pytest.ini_options]
+pythonpath = ["."]

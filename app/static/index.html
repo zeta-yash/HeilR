@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>HeilR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;600;700&family=JetBrains+Mono:wght@300;400;600&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>tailwind.config = { theme: { extend: { colors: { ink: "#f3f1ea", mu: "#a29eb0", gold: "#e8c27a", cy: "#5ad1ff", vio: "#7c6cff", low: "#5be3a1", medium: "#f2c14e", high: "#ff5d6c" }, fontFamily: { sans: ["Manrope", "system-ui", "sans-serif"], mono: ["JetBrains Mono", "monospace"] } } } }</script>
+  <style>
+    body {
+      background: #07070a;
+      color: #f3f1ea;
+      overflow-x: hidden;
+      background-image: radial-gradient(1px 1px at 12% 18%, #fff8, transparent), radial-gradient(1px 1px at 78% 12%, #fff6, transparent), radial-gradient(1.5px 1.5px at 44% 32%, #fff7, transparent), radial-gradient(1px 1px at 90% 55%, #fff5, transparent), radial-gradient(1px 1px at 22% 62%, #fff6, transparent);
+      background-size: 640px 640px
+    }
+
+    #torch {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      pointer-events: none;
+      background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 40%), rgba(124, 108, 255, .075), rgba(232, 194, 122, .04) 40%, transparent 70%)
+    }
+
+    .blob {
+      position: fixed;
+      left: 50%;
+      bottom: -34vh;
+      width: min(980px, 130vw);
+      aspect-ratio: 1.15;
+      transform: translateX(-50%);
+      z-index: 0;
+      pointer-events: none;
+      transition: opacity 1.4s, transform 1.4s cubic-bezier(.2, .7, .2, 1);
+      border-radius: 46% 54% 52% 48%/58% 44% 56% 42%;
+      animation: morph 16s ease-in-out infinite alternate;
+      background: radial-gradient(ellipse at 28% 22%, rgba(255, 214, 140, .9), transparent 34%), radial-gradient(ellipse at 72% 28%, rgba(255, 196, 120, .55), transparent 38%), radial-gradient(ellipse at 50% 86%, rgba(70, 110, 255, .6), transparent 52%), #0c0b10;
+      box-shadow: inset 0 0 90px rgba(255, 220, 160, .3), inset -40px -30px 120px rgba(80, 120, 255, .3), 0 0 60px rgba(232, 194, 122, .14)
+    }
+
+    .docked .blob {
+      opacity: .2;
+      transform: translateX(-50%) translateY(14vh) scale(.9)
+    }
+
+    @keyframes morph {
+      0% {
+        border-radius: 46% 54% 52% 48%/58% 44% 56% 42%;
+        rotate: -2deg
+      }
+
+      50% {
+        border-radius: 56% 44% 42% 58%/48% 56% 44% 52%;
+        rotate: 2deg
+      }
+
+      100% {
+        border-radius: 44% 56% 58% 42%/54% 46% 54% 46%;
+        rotate: -1deg
+      }
+    }
+
+    .glass {
+      position: relative;
+      overflow: hidden;
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid rgba(255, 255, 255, .08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px)
+    }
+
+    .glass:before,
+    .glass:after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .3s
+    }
+
+    .glass:before {
+      background: radial-gradient(260px circle at var(--x, -999px) var(--y, -999px), rgba(232, 194, 122, .08), transparent 70%)
+    }
+
+    .glass:after {
+      padding: 1px;
+      background: radial-gradient(180px circle at var(--x, -999px) var(--y, -999px), rgba(255, 255, 255, .4), transparent 70%);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)
+    }
+
+    .glass:hover:before,
+    .glass:hover:after {
+      opacity: 1
+    }
+
+    .gridbg {
+      background-color: #08080d;
+      background-image: linear-gradient(rgba(124, 108, 255, .13) 1px, transparent 1px), linear-gradient(90deg, rgba(124, 108, 255, .13) 1px, transparent 1px), radial-gradient(600px circle at 70% 0%, rgba(232, 194, 122, .1), transparent 70%);
+      background-size: 28px 28px, 28px 28px, 100% 100%
+    }
+
+    .rise {
+      opacity: 0;
+      animation: rise 1s cubic-bezier(.2, .7, .2, 1) forwards;
+      animation-delay: calc(var(--i, 0)*110ms)
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(.985);
+        filter: blur(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+        filter: none
+      }
+    }
+
+    .pop {
+      animation: pop .25s cubic-bezier(.2, .7, .2, 1)
+    }
+
+    @keyframes pop {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(.97)
+      }
+    }
+
+    .blip {
+      animation: blip .9s ease-in-out 1.4s 2
+    }
+
+    @keyframes blip {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 93, 108, 0)
+      }
+
+      50% {
+        box-shadow: 0 0 24px 7px rgba(255, 93, 108, .75);
+        border-color: #ff5d6c;
+        color: #fff
+      }
+    }
+
+    .busy:after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(100deg, transparent 30%, rgba(90, 209, 255, .18) 50%, transparent 70%);
+      animation: scan 1.1s linear infinite
+    }
+
+    @keyframes scan {
+      from {
+        transform: translateX(-100%)
+      }
+
+      to {
+        transform: translateX(100%)
+      }
+    }
+
+    .marq {
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+      mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent)
+    }
+
+    .marq-track {
+      animation: marq var(--d, 45s) linear infinite
+    }
+
+    .marq:hover .marq-track.pause {
+      animation-play-state: paused
+    }
+
+    .marq-track.rev {
+      animation-direction: reverse
+    }
+
+    @keyframes marq {
+      to {
+        transform: translateX(-50%)
+      }
+    }
+
+    .spin {
+      animation: rot .8s linear infinite
+    }
+
+    @keyframes rot {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    mark {
+      background: rgba(255, 93, 108, .22);
+      color: #fff;
+      border-bottom: 2px solid #ff5d6c;
+      border-radius: 4px;
+      padding: 0 3px;
+      transition: all .2s
+    }
+
+    mark.hot {
+      background: rgba(232, 194, 122, .3);
+      border-color: #e8c27a;
+      box-shadow: 0 0 14px rgba(232, 194, 122, .5)
+    }
+
+    .sb {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, .18) transparent
+    }
+
+    .node.on {
+      animation: pulse 2.4s ease-in-out infinite
+    }
+
+    @keyframes pulse {
+      50% {
+        box-shadow: 0 0 8px rgba(255, 93, 108, .2)
+      }
+    }
+
+    .steps {
+      counter-reset: s
+    }
+
+    .steps li {
+      counter-increment: s
+    }
+
+    .steps li:before {
+      content: counter(s)
+    }
+
+    @media(hover:none) {
+      #torch {
+        display: none
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+      * {
+        animation: none !important;
+        transition: none !important
+      }
+
+      .rise {
+        opacity: 1
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="torch"></div>
+  <div id="root"></div>
+  <script type="module">
+    import React, { useState, useEffect, useRef } from "https://esm.sh/react@18.3.1";
+    import { createRoot } from "https://esm.sh/react-dom@18.3.1/client";
+    import htm from "https://esm.sh/htm@3.1.1";
+    import * as L from "https://esm.sh/lucide-react@0.383.0?deps=react@18.3.1&exports=ArrowRight,Shuffle,Info,HelpCircle,Clock,X,ShieldCheck,ShieldAlert,Shield,Radar,ScanText,ListChecks,Flag,FlaskConical,Briefcase,GraduationCap,Wallet,Gift,MessageCircle,Loader2,Sparkles,Lock,PieChart,Megaphone,Share2,CheckCircle2,Download,Copy,Package,Banknote,FileText,KeyRound,Smartphone,Link2,Layers,Check";
+    const h = htm.bind(React.createElement);
+    const Ic = (n, p) => L[n] ? React.createElement(L[n], { size: 15, strokeWidth: 1.5, ...p }) : null;
+    const ST = ["hook", "trust", "pressure", "extraction"], LB = { low: "Low risk", medium: "Medium risk", high: "High risk" }, SH = { low: "ShieldCheck", medium: "Shield", high: "ShieldAlert" };
+    const H2 = "mb-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[.14em] text-gold";
+    const NB = "flex items-center gap-1.5 text-[11px] font-extralight uppercase tracking-[.16em] text-mu transition hover:text-white";
+    const RB = "grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-white/5 text-ink backdrop-blur transition hover:border-gold hover:text-white disabled:opacity-35 disabled:hover:border-white/15";
+    const COL = ["#e8c27a", "#5ad1ff", "#7c6cff", "#ff5d6c", "#5be3a1", "#f2c14e", "#ff9f6e", "#c084fc"];
+    const CHK = ["Do not pay or share any OTP or PIN.", "Verify on the official website, not the link.", "Report at cybercrime.gov.in or call 1930."];
+    const LIB = [
+      { ic: "Briefcase", t: "Fake internship with a fee", type: "Fake internship / fee", ex: "Selected without an interview, then asked for a 'refundable' registration deposit.", tip: "Genuine internships never charge you to join." },
+      { ic: "GraduationCap", t: "Scholarship or KYC link", type: "Scholarship / KYC link", ex: "'Your scholarship is on hold. Verify at this link within 24 hours.'", tip: "Scholarship portals do not send verify links on chat. Type the official address yourself." },
+      { ic: "Wallet", t: "Fake refund", type: "Fake refund", ex: "'Rs 4,999 refund pending. Enter your UPI PIN to receive it.'", tip: "You never enter a PIN to receive money." },
+      { ic: "Gift", t: "Prize or lucky draw", type: "Prize or lottery", ex: "'You won a laptop! Pay Rs 299 delivery to claim.'", tip: "You cannot win a contest you never entered." },
+      { ic: "MessageCircle", t: "Easy online job", type: "Fake job offer", ex: "'Earn Rs 3,000 a day liking videos. Message us on Telegram.'", tip: "Real jobs do not pay big money for simple tasks." },
+      { ic: "KeyRound", t: "OTP and card theft", type: "OTP or credential theft", ex: "'Your account is blocked. Share the OTP we just sent to unblock it.'", tip: "No bank or company ever needs your OTP, PIN or CVV." },
+      { ic: "Smartphone", t: "Fake app or APK", type: "Malicious app", ex: "'Download the new exam app from this link' ending in .apk.", tip: "Install apps only from the official Play Store or App Store." },
+      { ic: "Link2", t: "Look-alike or short link", type: "Suspicious link", ex: "'sbi-secure-login.online' or a bit.ly link pretending to be a bank.", tip: "Check the real domain. Shortened links hide where they lead." },
+      { ic: "Package", t: "Fake parcel fee", type: "Fake parcel fee", ex: "'Your parcel is held. Pay Rs 49 redelivery fee at this link.'", tip: "Couriers do not collect fees through random links." },
+      { ic: "Banknote", t: "Instant loan app", type: "Instant loan app", ex: "'Rs 50,000 in 5 minutes! Install the app and pay a processing fee.'", tip: "Real lenders do not ask for a fee before paying out." },
+      { ic: "FileText", t: "Result or paper leak link", type: "Result or paper leak link", ex: "'Exam result out! Log in with your password to see marks.'", tip: "Results are published only on the official college or board site." }];
+    const STACK = [["Python", "python"], ["FastAPI", "fastapi"], ["Pydantic", "pydantic"], ["LangChain", "langchain"], ["Claude", "claude"], ["Gemini", "googlegemini"], ["React", "react"], ["Tailwind CSS", "tailwindcss"], ["Lucide", "lucide"], ["Docker", "docker"], ["Hugging Face", "huggingface"], ["pytest", "pytest"], ["uv", "uv"]];
+    const SOCIAL = [["WhatsApp", "whatsapp", t => "https://wa.me/?text=" + t], ["Telegram", "telegram", t => "https://t.me/share/url?url=" + encodeURIComponent(location.origin) + "&text=" + t], ["X", "x", t => "https://twitter.com/intent/tweet?text=" + t], ["LinkedIn", "linkedin", t => "https://www.linkedin.com/feed/?shareActive=true&text=" + t], ["Facebook", "facebook", t => "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(location.origin) + "&quote=" + t], ["Email", "gmail", t => "mailto:?subject=Scam%20alert&body=" + t]];
+    async function api(p, b) { const r = await fetch(p, b ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) } : {}); if (!r.ok) throw new Error("Server error " + r.status); return r.json() }
+    const seedGen = () => Math.random().toString(16).slice(2, 6).toUpperCase();
+    const TS = /^\s*\[?\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4},?\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:[ap]m)?\]?\s*[-–]?\s*/i;
+    function splitMsgs(t) {
+      const out = []; let cur = null; t.split(/\r?\n/).forEach(l => { if (TS.test(l)) { if (cur) out.push(cur); cur = l.replace(TS, "") } else if (cur !== null) cur += "\n" + l; else if (l.trim()) cur = l }); if (cur) out.push(cur);
+      if (out.length > 1) return out.map(s => s.trim()).filter(Boolean); return t.split(/\n\s*\n|\n-{3,}\n/).map(s => s.trim()).filter(Boolean)
+    }
+
+    function wrap(x, text, px, y, w, lh) { let line = ""; for (const wd of text.split(" ")) { const t = line ? line + " " + wd : wd; if (x.measureText(t).width > w && line) { x.fillText(line, px, y); y += lh; line = wd } else line = t } x.fillText(line, px, y); return y + lh }
+    function drawCard(c) {
+      const cv = document.createElement("canvas"); cv.width = cv.height = 1080; const x = cv.getContext("2d"), F = "Manrope,system-ui,sans-serif";
+      x.fillStyle = "#07070a"; x.fillRect(0, 0, 1080, 1080);
+      [[260, 180, 720, "rgba(232,194,122,.32)"], [960, 1010, 640, "rgba(70,110,255,.38)"]].forEach(([a, b, r, col]) => { const g = x.createRadialGradient(a, b, 0, a, b, r); g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(0, 0, 1080, 1080) });
+      x.fillStyle = "#fff"; x.font = `700 56px ${F}`; x.fillText("HeilR", 70, 112);
+      x.fillStyle = "#ff5d6c"; x.font = `600 26px ${F}`; x.fillText("SCAM ALERT", 70, 200);
+      x.fillStyle = "#fff"; x.font = `700 76px ${F}`; let y = wrap(x, c.t, 70, 290, 940, 86);
+      x.fillStyle = "#e8c27a"; x.font = `600 24px ${F}`; x.fillText("WHAT IT LOOKS LIKE", 70, y + 14);
+      x.fillStyle = "#f3f1ea"; x.font = `italic 300 38px ${F}`; y = wrap(x, c.ex, 70, y + 64, 940, 50);
+      x.fillStyle = "#e8c27a"; x.font = `600 24px ${F}`; x.fillText("THE TELL-TALE SIGN", 70, y + 16);
+      x.fillStyle = "#f3f1ea"; x.font = `400 36px ${F}`; wrap(x, c.tip, 70, y + 66, 940, 48);
+      x.fillStyle = "rgba(255,255,255,.07)"; x.beginPath(); if (x.roundRect) x.roundRect(60, 800, 960, 200, 28); else x.rect(60, 800, 960, 200); x.fill();
+      x.fillStyle = "#5be3a1"; x.font = `600 24px ${F}`; x.fillText("WHAT TO DO", 90, 842);
+      x.fillStyle = "#fff"; x.font = `400 31px ${F}`; CHK.forEach((s, i) => x.fillText("✓  " + s, 90, 890 + i * 40));
+      x.fillStyle = "#a29eb0"; x.font = `300 24px ${F}`; x.fillText("Checked with HeilR · defence-only scam analyser", 70, 1048);
+      return cv.toDataURL("image/jpeg", .92)
+    }
+
+    function Marked({ text, flags, hot }) {
+      const rs = flags.flatMap((f, i) => f.spans.map(s => [s[0], s[1], i])).sort((a, b) => a[0] - b[0]); const out = []; let p = 0;
+      rs.forEach(([a, b, i]) => { if (a < p) return; out.push(text.slice(p, a)); out.push(h`<mark class=${hot === i ? "hot" : ""}>${text.slice(a, b)}</mark>`); p = b });
+      out.push(text.slice(p)); return h`<div class="whitespace-pre-wrap break-words text-[15px] leading-relaxed">${out}</div>`
+    }
+
+    function Ring({ score }) {
+      const [v, setV] = useState(0), C = 2 * Math.PI * 54;
+      useEffect(() => { let s = null, id; const f = t => { if (s === null) s = t; const p = Math.min(1, (t - s) / 1200); setV(Math.round(score * (1 - Math.pow(1 - p, 3)))); if (p < 1) id = requestAnimationFrame(f) }; id = requestAnimationFrame(f); return () => cancelAnimationFrame(id) }, [score]);
+      return h`<div class="relative h-[92px] w-[92px] shrink-0"><svg viewBox="0 0 120 120" class="h-full w-full"><circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,.08)" strokeWidth="7"/><circle cx="60" cy="60" r="54" fill="none" stroke="currentColor" strokeWidth="7" strokeLinecap="round" strokeDasharray=${C} strokeDashoffset=${C * (1 - v / 100)} transform="rotate(-90 60 60)" style=${{ filter: "drop-shadow(0 0 6px currentColor)" }}/></svg><b class="absolute inset-0 grid place-items-center font-mono text-2xl font-semibold text-white">${v}</b></div>`
+    }
+
+    function Modal({ title, icon, onClose, children, w = "640px", grid }) {
+      useEffect(() => { const k = e => e.key === "Escape" && onClose(); addEventListener("keydown", k); return () => removeEventListener("keydown", k) }, []);
+      return h`<div class="fixed inset-0 z-[70] grid place-items-center bg-black/65 p-4 backdrop-blur-sm" onClick=${onClose}>
+  <div class=${"pop sb max-h-[88vh] overflow-auto rounded-3xl border border-white/10 p-6 " + (grid ? "gridbg" : "glass")} style=${{ width: `min(${w},100%)` }} onClick=${e => e.stopPropagation()}>
+   <div class="mb-4 flex items-center justify-between"><div class="flex items-center gap-2 text-lg font-light tracking-wide">${Ic(icon, { size: 18 })}${title}</div>
+    <button class="text-mu transition hover:text-white" aria-label="Close" onClick=${onClose}>${Ic("X", { size: 18 })}</button></div>
+   <div class="space-y-3 text-[14px] font-light leading-relaxed text-ink/85">${children}</div></div></div>`
+    }
+    const Sec = (t, b) => h`<div><div class="mb-1 font-mono text-[11px] uppercase tracking-[.14em] text-gold">${t}</div>${b}</div>`;
+    const Li = a => h`<ul class="list-disc space-y-1 pl-5">${a.map(x => h`<li>${x}</li>`)}</ul>`;
+    const About = () => h`<div class="space-y-3">
+ ${Sec("What it is", h`<p>HeilR helps students judge a suspicious message, email or link in plain language. It returns a risk rating, the exact phrases and links that look wrong, and clear next steps. It never opens a link and never sends anything.</p>`)}
+ ${Sec("How it works", Li(["Your text is cleaned (hidden characters and look-alike letters removed).", "Rules look for pressure, fee requests, OTP/PIN requests, fake prizes and refunds, too-good job offers and risky links.", "Brand names are read in context: 'Google HR' is an identity claim, 'Google Form' is just a tool.", "Sender and link domains are compared with the real domains of the named company.", "Points add up to Low, Medium or High. Official college or government links and 'never share your OTP' warnings count in the message's favour.", "An optional AI step explains the findings in friendly words. It never sets the rating."]))}
+ ${Sec("Where it helps", Li(["Checking an internship, scholarship or refund message before paying or clicking.", "Checking a whole pasted chat at once (Bulk).", "Class and placement-cell groups: share an awareness card, or report a scam type anonymously to the campus chart.", "Awareness sessions, using the built-in scam library."]))}
+ ${Sec("How it is built", h`<p>A Python engine (FastAPI, Pydantic) makes the decision. A LangChain-wrapped language model adds a guarded explanation: input is redacted, output is validated, and any failure falls back to the engine. Campus reports go to a small CSV file holding only the date and scam type. The interface is React with Tailwind and Lucide icons, packaged in Docker for Hugging Face.</p>`)}
+ ${Sec("Limits", h`<p>It is rule-based guidance, not a guarantee. A low rating does not prove a message is safe, and a new scam wording can slip through.</p>`)}</div>`;
+    const Help = () => h`<div class="space-y-3">
+ ${Sec("Check a message", Li(["Paste the message, the full email (include the From: line for better results) or a link into the box.", "Press the arrow button or Enter. Shift+Enter starts a new line.", "The AI chip turns the friendly explanation on or off."]))}
+ ${Sec("Check many messages", Li(["Turn on BULK, then paste a WhatsApp chat export or several messages separated by blank lines (up to 50).", "A list opens sorted by risk. Click any row for the full breakdown."]))}
+ ${Sec("Try an example", Li(["Open Random Seed in the top bar and choose Spam or General. A matching sample is picked and checked at once."]))}
+ ${Sec("Read the result", Li(["The ring and label show the rating: Low, Medium or High.", "Kill chain lights up the scam stages found.", "Hover a red flag to light up its words in the message."]))}
+ ${Sec("Buttons on the right", Li(["Campus stats: an anonymous pie chart of reported scam types.", "Report to campus: adds one anonymous row (date and scam type only) to the chart. They glow when the message looks like a scam.", "Share: makes a JPEG awareness card and opens share options."]))}
+ ${Sec("If you think it is a scam", Li(["Do not pay, reply, click or share an OTP or PIN.", "Report at cybercrime.gov.in or call 1930. If you already paid, call 1930 immediately and tell your bank."]))}
+ ${Sec("Privacy", h`<p>Nothing you paste is stored. Links are never opened. Before any AI call, numbers, phone numbers and email or UPI IDs are hidden.</p>`)}</div>`;
+
+    function Clock() {
+      const f = () => new Date().toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }), [t, setT] = useState(f);
+      useEffect(() => { const i = setInterval(() => setT(f()), 15000); return () => clearInterval(i) }, []);
+      return h`<span class=${NB}>${Ic("Clock", { size: 13 })}${t}</span>`
+    }
+
+    function SeedMenu({ pick }) {
+      const [o, setO] = useState(false), [seed, setS] = useState(seedGen);
+      const go = async k => { setO(false); const s = seed; setS(seedGen()); await pick(k, s) };
+      const Opt = (k, ic, t, d) => h`<button class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition hover:bg-white/10" onClick=${() => go(k)}>${Ic(ic, { size: 16 })}<span><span class="block text-[13px] font-light text-white">${t}</span><span class="block text-[11px] font-extralight text-mu">${d}</span></span></button>`;
+      return h`<div class="relative" onMouseEnter=${() => setO(true)} onMouseLeave=${() => setO(false)}>
+  <button class=${NB} aria-haspopup="true" aria-expanded=${o} onClick=${() => setO(!o)}>${Ic("Shuffle", { size: 13 })}Random Seed</button>
+  ${o && h`<div class="absolute right-0 top-full z-50 w-64 pt-3"><div class="glass pop rounded-2xl p-2">
+   <div class="px-3 pb-1 pt-1 font-mono text-[10px] font-light tracking-[.14em] text-mu">SEED #${seed}</div>
+   ${Opt("spam", "ShieldAlert", "Spam message", "A scam-style sample")}${Opt("general", "MessageCircle", "General message", "A genuine-looking sample")}</div></div>`}</div>`
+    }
+
+    function Pie({ items }) {
+      const [hv, setHv] = useState(-1), tot = items.reduce((a, x) => a + x.count, 0) || 1; let a0 = -Math.PI / 2; const R = 100;
+      const sl = items.map((x, i) => {
+        const a = x.count / tot * 2 * Math.PI, a1 = a0 + a * .9999, m = a0 + a / 2, big = a > Math.PI ? 1 : 0;
+        const p = items.length === 1 ? `M0 ${-R}A${R} ${R} 0 1 1 -0.01 ${-R}Z` : `M0 0L${R * Math.cos(a0)} ${R * Math.sin(a0)}A${R} ${R} 0 ${big} 1 ${R * Math.cos(a1)} ${R * Math.sin(a1)}Z`; a0 += a; return { p, m, x, i }
+      });
+      return h`<div class="grid items-center gap-6 sm:grid-cols-[240px_1fr]">
+  <svg viewBox="-118 -118 236 236" class="mx-auto h-60 w-60">${sl.map(s => h`<path d=${s.p} fill=${COL[s.i % COL.length]} stroke="#08080d" strokeWidth="1.5" style=${{ transition: "transform .25s, opacity .25s", transform: hv === s.i ? `translate(${Math.cos(s.m) * 8}px,${Math.sin(s.m) * 8}px)` : "none", opacity: hv < 0 || hv === s.i ? 1 : .45, cursor: "pointer" }} onMouseEnter=${() => setHv(s.i)} onMouseLeave=${() => setHv(-1)}/>`)}</svg>
+  <div class="space-y-1.5">${sl.map(s => h`<div class=${"flex items-center gap-2 rounded-lg px-2 py-1 text-[13px] transition " + (hv === s.i ? "bg-white/10" : "")} onMouseEnter=${() => setHv(s.i)} onMouseLeave=${() => setHv(-1)}><span class="h-2.5 w-2.5 shrink-0 rounded-sm" style=${{ background: COL[s.i % COL.length] }}></span><span class="flex-1">${s.x.scam_type}</span><span class="font-mono text-[12px] text-mu">${s.x.count} · ${Math.round(s.x.count / tot * 100)}%</span></div>`)}</div></div>`
+    }
+
+    function Stats({ onClose }) {
+      const [d, setD] = useState(null), [e, setE] = useState("");
+      useEffect(() => { api("/api/stats").then(setD).catch(x => setE(x.message)) }, []);
+      return h`<${Modal} title="Campus scam reports" icon="PieChart" onClose=${onClose} w="900px" grid=${true}>
+  <div class="overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+   <div class="flex items-center gap-2 border-b border-white/10 px-4 py-2"><span class="h-2.5 w-2.5 rounded-full bg-high/80"></span><span class="h-2.5 w-2.5 rounded-full bg-medium/80"></span><span class="h-2.5 w-2.5 rounded-full bg-low/80"></span>
+    <span class="ml-2 font-mono text-[11px] text-mu">anonymous@campus:~/reports.csv</span><span class="ml-auto flex items-center gap-1.5 font-mono text-[10px] text-low"><span class="h-1.5 w-1.5 animate-pulse rounded-full bg-low"></span>LIVE</span></div>
+   <div class="p-5">${e ? h`<p>${e}</p>` : !d ? h`<p class="font-mono text-xs text-mu">Reading reports.csv...</p>` : h`
+    <div class="mb-4 flex flex-wrap items-baseline gap-x-6 gap-y-1"><div><span class="font-mono text-3xl font-semibold text-white">${d.total}</span> <span class="text-mu">reports</span></div><div class="font-mono text-[11px] text-mu">last updated ${d.updated || "-"} · source ${d.source}</div></div>
+    ${d.types.length ? h`<${Pie} items=${d.types}/>` : h`<p>No reports yet.</p>`}`}</div></div>
+  <p class="text-[12px] text-mu">Anonymous by design: each report adds one row with the date and scam type. No message text, name or device is stored. The first rows are dummy data for the demo. <a class="text-gold underline" href="/api/reports.csv" download>Download the CSV</a></p><//>`}
+
+    function ShareModal({ c, onClose }) {
+      const [img, setImg] = useState(""), [ok, setOk] = useState(false);
+      useEffect(() => { let live = true; (async () => { try { await document.fonts.load("700 40px Manrope"); await document.fonts.load("300 40px Manrope") } catch (e) { } if (live) setImg(drawCard(c)) })(); return () => { live = false } }, [c]);
+      const msg = `Scam alert: ${c.t}. ${c.tip} Check suspicious messages before you pay. Report at cybercrime.gov.in or call 1930. #HeilR`, q = encodeURIComponent(msg);
+      const share = async () => { try { const b = await (await fetch(img)).blob(), f = new File([b], "heilr-alert.jpg", { type: "image/jpeg" }); if (navigator.canShare && navigator.canShare({ files: [f] })) await navigator.share({ files: [f], text: msg }); else await navigator.share({ text: msg }) } catch (e) { } };
+      const BTN = "flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-[13px] transition hover:border-gold hover:bg-white/10";
+      return h`<${Modal} title="Share awareness card" icon="Share2" onClose=${onClose} w="720px">
+  <div class="grid gap-4 sm:grid-cols-[260px_1fr]">
+   <div class="aspect-square overflow-hidden rounded-2xl border border-white/10 bg-black/40">${img ? h`<img alt=${"Awareness card: " + c.t} src=${img} class="h-full w-full"/>` : h`<div class="grid h-full place-items-center text-mu">${Ic("Loader2", { size: 20, className: "spin" })}</div>`}</div>
+   <div class="space-y-3"><div><div class="font-semibold text-white">${c.t}</div><div class="text-[12px] text-mu">1080 × 1080 JPEG, ready for stories, status and group chats.</div></div>
+    <div class="flex flex-wrap gap-2"><a class=${BTN + " !border-gold !bg-gold !text-black"} href=${img || "#"} download=${"heilr-" + c.t.toLowerCase().replace(/[^a-z0-9]+/g, "-") + ".jpg"}>${Ic("Download")}Download JPEG</a>
+     ${navigator.share ? h`<button class=${BTN} onClick=${share}>${Ic("Share2")}Share image</button>` : ""}
+     <button class=${BTN} onClick=${async () => { try { await navigator.clipboard.writeText(msg); setOk(true); setTimeout(() => setOk(false), 1600) } catch (e) { } }}>${Ic(ok ? "Check" : "Copy")}${ok ? "Copied" : "Copy text"}</button></div>
+    <div class="font-mono text-[10px] uppercase tracking-[.14em] text-gold">Share on</div>
+    <div class="flex flex-wrap gap-2">${SOCIAL.map(([n, s, f]) => h`<a class=${BTN} target="_blank" rel="noopener noreferrer" href=${f(q)}><img alt="" class="h-4 w-4" src=${"https://cdn.simpleicons.org/" + s + "/ffffff"} onError=${e => { e.target.style.display = "none" }}/>${n}</a>`)}</div>
+    <p class="text-[11px] text-mu">Social links share the text. To post the card, download the JPEG and attach it, or use Share image on a phone.</p></div></div><//>`}
+
+    function BulkModal({ rows, onPick, onClose }) {
+      const o = { high: 0, medium: 1, low: 2 }, R = [...rows].sort((a, b) => o[a.level] - o[b.level] || b.score - a.score), n = l => rows.filter(x => x.level === l).length, C = { high: "text-high", medium: "text-medium", low: "text-low" };
+      return h`<${Modal} title=${rows.length + " messages checked"} icon="Layers" onClose=${onClose} w="820px">
+  <div class="font-mono text-[12px] text-mu"><span class="text-high">${n("high")} high</span> · <span class="text-medium">${n("medium")} medium</span> · <span class="text-low">${n("low")} low</span> · click a row for the full breakdown</div>
+  <div class="space-y-2">${R.map(x => h`<button class="glass block w-full rounded-xl p-3 text-left transition hover:border-gold" onClick=${() => onPick(x.full)}><div class="flex items-center gap-3"><span class=${"w-24 shrink-0 font-mono text-[11px] uppercase " + C[x.level]}>${x.level} · ${x.score}</span><span class="min-w-0 flex-1 truncate text-[13px] text-ink">${x.text.replace(/\s+/g, " ")}</span></div>${x.flags.length > 0 && h`<div class="mt-1 pl-[108px] text-[11px] text-mu">${x.flags.join(" · ")}</div>`}</button>`)}</div><//>`
+    }
+
+    function Dash({ r, hot, setH, onStats, onShare }) {
+      const [ev, setEv] = useState(null), [rep, setRep] = useState("idle"); let i = 0; const n = x => ({ "--i": i++, ...x });
+      const FB = /^(No strong warning signs were found\. This is not a guarantee|\d+ warning sign\(s\) found, mainly:)/, aiText = r.llm_used && !FB.test(r.summary);
+      const C = { low: "#5be3a1", medium: "#f2c14e", high: "#ff5d6c" }[r.level], scam = r.level !== "low";
+      const report = async () => { setRep("sending"); try { await api("/api/report", { scam_type: r.scam_type }); setRep("done") } catch (e) { setRep("err") } };
+      const Tip = (label, btn) => h`<div class="group relative">${btn}<span class="pointer-events-none absolute right-full top-1/2 z-20 mr-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-black/85 px-2.5 py-1 font-mono text-[10px] text-white opacity-0 backdrop-blur transition group-focus-within:opacity-100 group-hover:opacity-100 max-lg:left-1/2 max-lg:right-auto max-lg:top-full max-lg:mr-0 max-lg:mt-2 max-lg:-translate-x-1/2 max-lg:translate-y-0">${label}</span></div>`;
+      const repLabel = !scam ? "Nothing to report (rated low)" : rep === "done" ? "Reported anonymously. Thank you" : rep === "err" ? "Could not report, try again" : "Report to campus (anonymous)";
+      const lib = LIB.find(x => x.type === r.scam_type) || LIB[7];
+      return h`<div>
+ <div class="relative z-10 mx-auto grid w-full max-w-[1320px] gap-5 px-4 pb-5 pt-1 lg:h-[calc(100vh-214px)] lg:min-h-[500px] lg:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+  <div class="flex min-h-0 flex-col gap-5">
+   <div class="glass rise flex shrink-0 items-center gap-4 rounded-2xl p-4" style=${n({ color: C, borderColor: C + "66", boxShadow: `0 0 50px ${C}22` })}>
+    <${Ring} score=${r.score}/>
+    <div class="min-w-0"><div class="flex items-center gap-2 text-2xl font-semibold tracking-tight">${Ic(SH[r.level], { size: 22 })}${LB[r.level]}</div>
+     <div class="font-mono text-[11px] uppercase tracking-wider text-mu">${r.scam_type} · ${r.flags.length} flag${r.flags.length === 1 ? "" : "s"}</div>
+     ${!r.aiOn && h`<p class="sb mt-1.5 max-h-20 overflow-auto text-[13px] font-light leading-snug text-ink/90">${r.summary}</p>`}</div></div>
+   <div class="glass rise shrink-0 rounded-2xl p-4" style=${n()}><div class=${H2}>${Ic("Radar")}Scam kill chain</div>
+    <div class="grid grid-cols-2 gap-2">${ST.map(s => h`<div class=${"node rounded-xl border px-2 py-2 text-center font-mono text-[11px] uppercase tracking-wider transition-all duration-500 " + (r.stages.includes(s) ? "on border-high bg-high/15 text-white shadow-[0_0_22px_rgba(255,93,108,.35)]" : "border-white/10 text-mu")}>${s}</div>`)}</div></div>
+   <div class="glass rise sb min-h-0 flex-1 overflow-auto rounded-2xl p-4" style=${n()}><div class=${H2}>${Ic("FlaskConical")}Report card</div>
+    <button class="rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-[13px] font-light transition hover:border-gold hover:shadow-[0_0_20px_rgba(232,194,122,.25)]" onClick=${async () => setEv(await api("/api/eval"))}>Run labelled test set</button>
+    ${ev && h`<div class="mt-2 text-[13px]"><b>${ev.correct} of ${ev.total} correct.</b> ${ev.missed_scams.length} missed, ${ev.false_alarms.length} false alarms.${[...ev.missed_scams.map(x => ["Missed", x]), ...ev.false_alarms.map(x => ["False alarm", x])].map(([k, x]) => h`<div class="font-mono text-[10px] text-mu">${k} (${x.level}): ${x.text}</div>`)}<div class="font-mono text-[10px] text-mu">${ev.note}</div></div>`}</div></div>
+  <div class="flex min-h-0 flex-col gap-5">
+   <div class="glass rise sb min-h-0 flex-1 overflow-auto rounded-2xl p-4" style=${n()}><div class=${H2}>${Ic("ScanText")}The message, marked up</div><${Marked} text=${r.text} flags=${r.flags} hot=${hot}/></div>
+   <div class="glass rise sb max-h-[46%] shrink-0 overflow-auto rounded-2xl p-4" style=${n()}><div class=${H2}>${Ic("ListChecks")}What to do next</div>
+    <ol class="steps space-y-2">${r.steps.map(s => h`<li class="relative pl-8 text-[13px] font-light leading-snug before:absolute before:left-0 before:top-0 before:grid before:h-5 before:w-5 before:place-items-center before:rounded-full before:bg-cy before:font-mono before:text-[10px] before:font-semibold before:text-black">${s}</li>`)}</ol></div></div>
+  <div class="flex min-h-0 flex-col gap-5">
+   ${r.aiOn && h`<div class="glass rise sb max-h-[42%] shrink-0 overflow-auto rounded-2xl p-4" style=${n()}><div class=${H2}>${Ic("Sparkles")}AI-generated explanation</div><p class="text-[13px] font-light leading-snug text-ink/90">${r.summary}</p><p class="mt-2 font-mono text-[10px] text-mu">${aiText ? "Written by an AI model from the findings below. The rating itself comes from the rules engine." : "AI explanation unavailable, so the built-in summary is shown."}</p></div>`}
+   <div class="glass rise sb min-h-0 flex-1 overflow-auto rounded-2xl p-4" style=${n()}><div class=${H2}>${Ic("Flag")}Red flags</div>
+    <div class="space-y-2.5">${r.flags.length ? r.flags.map((f, k) => h`<div class=${"rounded-xl border bg-white/[.03] p-3 transition " + (hot === k ? "translate-x-1 border-gold" : "border-white/10")} onMouseEnter=${() => setH(k)} onMouseLeave=${() => setH(-1)}><b class="block text-[13px] font-semibold">${f.title}</b><span class="block text-[12px] font-light text-mu">${f.why}</span>${f.evidence.length > 0 && h`<q class="mt-1 block break-all font-mono text-[10px] text-gold [quotes:none]">${f.evidence.join(" | ")}</q>`}</div>`) : h`<div class="text-[13px] font-light text-mu">No red flags matched.</div>`}
+    ${r.counter.map(c => h`<div class="rounded-xl border-l-2 border-low bg-low/10 p-3 text-[12px] font-light">${c}</div>`)}</div></div></div>
+  <div class="rise flex flex-col items-center gap-3 max-lg:order-first max-lg:flex-row max-lg:justify-end" style=${n()}>
+   ${Tip("Campus scam stats", h`<button class=${RB} aria-label="Campus scam stats" onClick=${onStats}>${Ic("PieChart", { size: 18 })}</button>`)}
+   ${Tip(repLabel, h`<button class=${RB + (scam && rep === "idle" ? " blip" : "")} aria-label="Report to campus" disabled=${!scam || rep === "sending" || rep === "done"} onClick=${report}>${rep === "sending" ? Ic("Loader2", { size: 18, className: "spin" }) : Ic(rep === "done" ? "CheckCircle2" : "Megaphone", { size: 18 })}</button>`)}
+   ${Tip("Share awareness card (JPEG)", h`<button class=${RB + (scam ? " blip" : "")} aria-label="Share awareness card" onClick=${() => onShare(lib)}>${Ic("Share2", { size: 18 })}</button>`)}</div>
+ </div>
+ <section class="relative z-10 mx-auto mt-6 max-w-[1320px] px-4"><div class=${H2 + " !text-sm"}>${Ic("Sparkles", { size: 18 })}Common student scams</div>
+  <div class="marq overflow-hidden"><div class="marq-track pause flex w-max gap-5 py-2" style=${{ "--d": "110s" }}>${[...LIB, ...LIB].map(c => h`<div class="glass flex w-[27rem] shrink-0 flex-col rounded-3xl p-6">
+   <div class="mb-3 flex items-center gap-3 text-xl font-semibold text-gold">${Ic(c.ic, { size: 24 })}${c.t}</div>
+   <p class="text-[15px] font-light italic leading-relaxed text-ink/90">${c.ex}</p><p class="mt-3 text-[14px] font-light leading-relaxed text-mu">${c.tip}</p>
+   <div class="mt-4 space-y-1.5 border-t border-white/10 pt-4">${CHK.map(s => h`<div class="flex items-start gap-2 text-[13px] font-light text-ink/85"><span class="mt-0.5 text-low">${Ic("Check", { size: 14, strokeWidth: 2 })}</span>${s}</div>`)}</div>
+   <button class="mt-5 flex w-fit items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3.5 py-2 text-[13px] transition hover:border-gold hover:shadow-[0_0_20px_rgba(232,194,122,.25)]" onClick=${() => onShare(c)}>${Ic("Share2", { size: 14 })}Share card</button></div>`)}</div></div></section>
+ <section class="relative z-10 mx-auto mt-10 max-w-[1320px] px-4"><div class=${H2}>Tech Stack used</div>
+  <div class="marq overflow-hidden"><div class="marq-track rev flex w-max items-center py-2" style=${{ "--d": "36s" }}>${[...STACK, ...STACK].map(([t, s]) => h`<div class="flex items-center gap-2.5 px-7 text-mu"><img alt="" class="h-5 w-5 opacity-80" src=${"https://cdn.simpleicons.org/" + s + "/9b97a8"} onError=${e => { e.target.style.display = "none" }}/><span class="whitespace-nowrap text-sm font-extralight tracking-wide">${t}</span></div>`)}</div></div></section>
+ <p class="relative z-10 mx-auto max-w-[1320px] px-4 pb-8 pt-6 text-center text-[11px] font-light text-mu">Guidance, not a guarantee. When money, OTPs or documents are involved, confirm on the official website. Report fraud at cybercrime.gov.in or call 1930. Defence-only.</p></div>`}
+
+    function App() {
+      const [t, setT] = useState(""), [r, setR] = useState(null), [busy, setB] = useState(false), [err, setE] = useState(""), [llm, setL] = useState(true), [bulk, setBk] = useState(false), [hot, setH] = useState(-1), [k, setK] = useState(0), [modal, setM] = useState(null), [sc, setSc] = useState(null), [rows, setRows] = useState([]);
+      const ta = useRef(null);
+      useEffect(() => {
+        let tx = innerWidth / 2, ty = innerHeight * .4, x = tx, y = ty, id;
+        const mv = e => { tx = e.clientX; ty = e.clientY }; addEventListener("pointermove", mv);
+        const tick = () => {
+          x += (tx - x) * .14; y += (ty - y) * .14; const d = document.documentElement.style; d.setProperty("--mx", x + "px"); d.setProperty("--my", y + "px");
+          document.querySelectorAll(".glass").forEach(el => { const b = el.getBoundingClientRect(); if (b.bottom < 0 || b.top > innerHeight) return; el.style.setProperty("--x", (tx - b.left) + "px"); el.style.setProperty("--y", (ty - b.top) + "px") });
+          id = requestAnimationFrame(tick)
+        };
+        id = requestAnimationFrame(tick); return () => { removeEventListener("pointermove", mv); cancelAnimationFrame(id) }
+      }, []);
+      useEffect(() => { const el = ta.current; if (el) { el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight, 170) + "px" } }, [t]);
+      const run = async text => {
+        if (!text.trim() || busy) return; setB(true); setE(""); setM(null);
+        try { const d = await api("/api/analyze", { text, use_llm: llm }); setR({ ...d, text, aiOn: llm }); setK(x => x + 1); setH(-1) }
+        catch (e) { setE(e.message + ". If the server was asleep, wait a few seconds and try again.") } setB(false)
+      };
+      const submit = async () => {
+        if (!t.trim() || busy) return;
+        if (bulk) { const ms = splitMsgs(t).slice(0, 50); if (ms.length > 1) { setB(true); setE(""); try { const res = await api("/api/bulk", { texts: ms }); setRows(res.map((x, i) => ({ ...x, full: ms[i] }))); setM("bulk") } catch (e) { setE(e.message) } setB(false); return } }
+        run(t)
+      };
+      const onIn = e => { const v = e.target.value; setT(v); if (!bulk && (v.match(new RegExp(TS.source, "gim")) || []).length >= 2) setBk(true) };
+      const pick = async (kind, seed) => { try { const l = (await api("/api/samples")).filter(x => x.scam === (kind === "spam")); const s = l[parseInt(seed, 16) % l.length]; setT(s.text); setBk(false); run(s.text) } catch (e) { setE(e.message) } };
+      return h`<div class=${r ? "docked" : ""}>
+  <div class="blob"></div>
+  <nav class="fixed inset-x-0 top-0 z-50 flex items-center justify-end gap-4 px-5 py-3 sm:px-8">
+   <${SeedMenu} pick=${pick}/><span class="h-3 w-px bg-white/15"></span>
+   <button class=${NB} onClick=${() => setM("about")}>${Ic("Info", { size: 13 })}About</button><span class="h-3 w-px bg-white/15"></span>
+   <button class=${NB} onClick=${() => setM("help")}>${Ic("HelpCircle", { size: 13 })}Help</button><span class="h-3 w-px bg-white/15"></span><${Clock}/></nav>
+  <div class=${"relative z-10 flex flex-col items-center px-4 transition-[padding] duration-[900ms] ease-out " + (r ? "pb-7 pt-14" : "pb-10 pt-[30vh]")}>
+   <h1 class=${"m-0 bg-gradient-to-b from-white to-gold bg-clip-text font-bold leading-none tracking-[-.05em] text-transparent transition-all duration-[900ms] " + (r ? "text-[1.9rem]" : "text-[clamp(4rem,15vw,10rem)]")}>HeilR</h1>
+   <div class=${"relative flex w-[min(720px,100%)] items-end gap-2 overflow-hidden rounded-[30px] border border-white/20 bg-black/45 py-2.5 pl-5 pr-2.5 shadow-[0_20px_80px_rgba(0,0,0,.6)] backdrop-blur-xl transition-all duration-[900ms] focus-within:border-gold/60 " + (r ? "mt-6 " : "mt-9 ") + (busy ? "busy" : "")}>
+    <textarea ref=${ta} rows="1" class="max-h-[170px] min-h-[30px] flex-1 resize-none border-0 bg-transparent py-2 text-[1.08rem] font-normal text-white caret-gold outline-none placeholder:text-white/55 [text-shadow:0_1px_8px_rgba(0,0,0,.8)]" aria-label="Message, email or link to verify" placeholder=${bulk ? "Paste a chat export or several messages separated by blank lines..." : "Paste a message, email or link to verify..."} value=${t} onInput=${onIn} onKeyDown=${e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit() } }}/>
+    <button class=${"mb-1.5 self-end rounded-full border px-2.5 py-1 font-mono text-[10px] tracking-wider transition " + (bulk ? "border-gold bg-gold text-black shadow-[0_0_14px_rgba(232,194,122,.5)]" : "border-white/20 text-white/70")} title="Bulk mode: check many pasted messages at once" aria-pressed=${bulk} onClick=${() => setBk(!bulk)}>BULK</button>
+    <button class=${"mb-1.5 self-end rounded-full border px-2.5 py-1 font-mono text-[10px] tracking-wider transition " + (llm ? "border-cy bg-cy text-black shadow-[0_0_14px_rgba(90,209,255,.5)]" : "border-white/20 text-white/70")} title="Plain-language AI explanation" aria-pressed=${llm} onClick=${() => setL(!llm)}>AI</button>
+    <button class="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-full bg-white text-black transition hover:scale-110 hover:shadow-[0_0_28px_rgba(255,255,255,.5)] disabled:opacity-30 disabled:hover:scale-100" onClick=${submit} disabled=${busy || !t.trim()} aria-label="Verify message">${busy ? Ic("Loader2", { size: 22, className: "spin" }) : Ic("ArrowRight", { size: 22, strokeWidth: 2 })}</button></div>
+   ${err && h`<div class="glass mt-3 w-[min(720px,100%)] rounded-2xl border-high p-3 text-sm" role="alert">${err}</div>`}</div>
+  ${r && h`<${Dash} key=${k} r=${r} hot=${hot} setH=${setH} onStats=${() => setM("stats")} onShare=${c => { setSc(c); setM("share") }}/>`}
+  ${modal === "about" && h`<${Modal} title="About HeilR" icon="Info" onClose=${() => setM(null)}><${About}/><//>`}
+  ${modal === "help" && h`<${Modal} title="How to use HeilR" icon="HelpCircle" onClose=${() => setM(null)}><${Help}/><//>`}
+  ${modal === "stats" && h`<${Stats} onClose=${() => setM(null)}/>`}
+  ${modal === "share" && sc && h`<${ShareModal} c=${sc} onClose=${() => setM(null)}/>`}
+  ${modal === "bulk" && h`<${BulkModal} rows=${rows} onPick=${x => { setT(x); setBk(false); run(x) }} onClose=${() => setM(null)}/>`}</div>`
+    }
+
+    class EB extends React.Component {
+      constructor(p) { super(p); this.state = { e: null } }
+      static getDerivedStateFromError(e) { return { e } }
+      componentDidCatch(e, i) { console.error("HeilR UI crash:", e, i) }
+      render() { return this.state.e ? h`<div class="glass mx-auto mt-10 max-w-lg rounded-2xl p-4" role="alert"><b>Display error.</b><div class="font-mono text-xs text-mu">${String(this.state.e && (this.state.e.message || this.state.e))}</div><button class="mt-2 rounded-xl border border-white/15 px-3 py-1" onClick=${() => location.reload()}>Reload</button></div>` : this.props.children }
+    }
+    createRoot(document.getElementById("root")).render(h`<${EB}><${App}/><//>`);
+  </script>
+</body>
+
+</html>

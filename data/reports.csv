@@ -1,0 +1,36 @@
+date,scam_type,count
+2026-09-07,Prize or lottery,3
+2026-09-08,Fake internship / fee,7
+2026-09-09,OTP or credential theft,2
+2026-09-09,Scholarship / KYC link,3
+2026-09-10,Fake refund,3
+2026-09-11,Fake job offer,2
+2026-09-11,Malicious app,2
+2026-09-12,Suspicious link,3
+2026-09-14,Fake job offer,5
+2026-09-14,Fake refund,6
+2026-09-14,Malicious app,1
+2026-09-14,Prize or lottery,4
+2026-09-14,Scholarship / KYC link,7
+2026-09-15,OTP or credential theft,3
+2026-09-18,Suspicious link,1
+2026-09-19,Fake internship / fee,8
+2026-09-21,Fake internship / fee,5
+2026-09-21,Fake job offer,3
+2026-09-21,Fake refund,4
+2026-09-21,OTP or credential theft,4
+2026-09-22,Scholarship / KYC link,7
+2026-09-23,Malicious app,1
+2026-09-25,Suspicious link,1
+2026-09-26,Prize or lottery,2
+2026-09-28,Malicious app,2
+2026-09-28,Scholarship / KYC link,4
+2026-09-29,Suspicious link,4
+2026-10-02,Fake internship / fee,14
+2026-10-02,Fake job offer,6
+2026-10-02,Fake refund,5
+2026-10-02,OTP or credential theft,5
+2026-10-03,Prize or lottery,3
+2026-10-06,Fake internship / fee,1
+2026-10-06,OTP or credential theft,1
+2026-10-06,Fake internship / fee,1
