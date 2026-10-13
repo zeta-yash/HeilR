@@ -133,5 +133,5 @@ def explain(level: str, stype: str, flags) -> str | None:
             return None
         return s
     except Exception as e:
-        log.warning("explanation failed: %s", e); return None
+        log.warning("explanation failed: %s", e); return None #exception
 
